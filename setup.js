@@ -5,7 +5,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // For example, if using GitHub Pages, it might be:
     // 'https://your-username.github.io/your-repo-name'
     // NO TRAILING SLASH /
-    const YOUR_HOSTED_URL = 'https://your-username.github.io/speed-project';
+    const YOUR_HOSTED_URL = 'https://github.com/pratikringe46/speed_up';
 
 
     // This is the URL to the *actual* script that will run on YouTube.
@@ -34,4 +34,5 @@ document.addEventListener('DOMContentLoaded', function() {
         alert('DO NOT CLICK this button.\n\nDRAG it to your Bookmarks Bar.');
         return false;
     };
+
 });
