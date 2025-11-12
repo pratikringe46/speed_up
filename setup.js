@@ -1,40 +1,24 @@
+// This is the new, complete setup file.
+// It does not depend on any other files.
+
 document.addEventListener('DOMContentLoaded', function() {
     
-    // !!! --- YOU MUST CHANGE THIS --- !!!
-    // Change this to the URL where you will host your files.
-    // For example, if using GitHub Pages, it might be:
-    // 'https://your-username.github.io/your-repo-name'
-    // NO TRAILING SLASH /
-    const YOUR_HOSTED_URL = 'https://pratikringe46.github.io/speed_up';
+    /**
+     * This is the complete, self-contained bookmarklet code.
+     * It combines YOUR request for a "prompt" with the working
+     * "MutationObserver" logic from the 'velut' project.
+     */
+    const bookmarkletCode = `(function(){let d=document,w=window;const c=(w.__vss||1).toString(),s=prompt("Enter desired playback speed:",c);if(!s)return;const r=parseFloat(s);if(isNaN(r)||r<=0){alert("Invalid speed.");return}w.__vss=r;let e=o=>{d.querySelectorAll("video,audio").forEach(t=>{t.playbackRate=w.__vss})};let n=()=>{w.__vso=w.__vso||new MutationObserver(()=>{e(!0)}),w.__vsa||(()=>{let o=d.querySelector("body");o&&(w.__vso.observe(o,{subtree:!0,childList:!0}),w.__vsa=!0)})()};n(),e()})();`;
 
-
-    // This is the URL to the *actual* script that will run on YouTube.
-    // We add a random number ('+Date.now()') to prevent caching issues.
-    const scriptUrl = `${YOUR_HOSTED_URL}/controller.js?v=` + Date.now();
-
-    // This is the tiny code that will live inside the bookmarklet.
-    // It injects your 'controller.js' script onto the page.
-    const bookmarkletCode = `
-    (function() {
-        var script = document.createElement('script');
-        script.src = '${scriptUrl}';
-        document.body.appendChild(script);
-    })();
-    `;
-
-    // Minify the code to fit into the 'href' attribute
-    const minifiedCode = bookmarkletCode.replace(/(\r\n|\n|\r|\s\s+)/gm, '');
-
-    // Set the link's href to the minified bookmarklet code
+    // Find the link element on our page...
     const bookmarkletLink = document.getElementById('bookmarkletLink');
-    bookmarkletLink.href = 'javascript:' + minifiedCode;
+    
+    // ...and set its href attribute to the new, all-in-one code.
+    bookmarkletLink.href = 'javascript:' + bookmarkletCode;
 
-    // Add a helper alert to prevent users from just clicking the link
+    // Add helper 'onclick' to prevent confusion
     bookmarkletLink.onclick = function() {
         alert('DO NOT CLICK this button.\n\nDRAG it to your Bookmarks Bar.');
-        return false;
+        return false; 
     };
-
 });
-
-
