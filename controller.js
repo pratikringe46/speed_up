@@ -1,98 +1,89 @@
-// This is a much more advanced controller script that can
-// search inside iframes and Shadow DOMs (which YouTube uses).
-
+/**
+ * This script is adapted from the velut/videospeedup.com project.
+ * It contains specific logic to find the video element on complex sites like YouTube.
+ */
 (function() {
-    
-    // Check if the controller is already on the page
-    if (window.videoSpeedController) {
-        window.videoSpeedController.run();
-        return;
-    }
 
-    const controller = {
-        videos: [], // This will hold all found video elements
+    function VideoSpeed() {
+        this.videos = [];
+        this.is_yt = false; // Flag for YouTube
 
         /**
-         * Recursively finds all video elements, searching in the main document,
-         * inside iframes, and inside Shadow DOMs.
+         * Finds all video elements.
+         * Contains a special check for YouTube's new Shadow DOM player.
          */
-        findVideos: function() {
-            let videosList = [];
-            
-            function recursiveSearch(doc) {
-                if (!doc) return;
+        this.findVideos = function() {
+            this.videos = document.querySelectorAll('video');
+            this.is_yt = false;
 
-                // 1. Find videos in the current document
-                doc.querySelectorAll('video').forEach(video => {
-                    videosList.push(video);
-                });
-
-                // 2. Search inside all iframes in this document
-                try {
-                    doc.querySelectorAll('iframe').forEach(iframe => {
-                        recursiveSearch(iframe.contentDocument);
-                    });
-                } catch (e) {
-                    // Cross-origin iframe security will block access, this is normal
-                    // console.log('Could not access iframe: ', e.message);
+            // This is the specific fix for YouTube:
+            // It looks for a specific attribute that YouTube's player uses.
+            if (window.location.hostname.includes('youtube.com') && this.videos.length === 0) {
+                var shadow = document.querySelectorAll('[data-youtube-player-shadow-internal]');
+                if (shadow.length > 0) {
+                    this.videos = shadow[0].shadowRoot.querySelectorAll('video');
+                    this.is_yt = true;
                 }
-                
-                // 3. Search inside all Shadow DOMs in this document
-                doc.querySelectorAll('*').forEach(el => {
-                    if (el.shadowRoot) {
-                        recursiveSearch(el.shadowRoot);
-                    }
-                });
             }
-
-            // Start the search from the main document
-            recursiveSearch(document);
-            this.videos = videosList;
             return this.videos.length > 0;
-        },
+        };
 
-        setSpeed: function(rate) {
-            if (this.videos.length === 0) {
-                console.warn('VideoSpeedController: No videos found to set speed.');
+        /**
+         * Gets the current speed.
+         */
+        this.getSpeed = function() {
+            if (this.videos.length > 0) {
+                return this.videos[0].playbackRate;
+            }
+            return 1; // Default
+        };
+
+        /**
+         * Sets the speed for all found videos.
+         */
+        this.setSpeed = function(rate) {
+            if (rate > 0) {
+                this.videos.forEach(function(video) {
+                    video.playbackRate = rate;
+                });
+            } else {
+                alert('Invalid speed. Please enter a positive number.');
+            }
+        };
+
+        /**
+         * The main function that runs when called.
+         */
+        this.run = function() {
+            if (!this.findVideos()) {
+                alert('No HTML5 video found on this page.');
                 return;
             }
-            this.videos.forEach(function(video) {
-                video.playbackRate = rate;
-            });
-            console.log('Video speed set to: ' + rate);
-        },
 
-        promptForSpeed: function() {
-            // Get speed from the first video, or default to 1.0
-            const currentSpeed = (this.videos[0] && this.videos[0].playbackRate) ? this.videos[0].playbackRate : '1.0';
-            
-            const speedInput = prompt('Enter desired playback speed:', currentSpeed);
+            var currentSpeed = this.getSpeed();
+            var newSpeed = prompt('Enter desired playback speed:', currentSpeed);
 
-            if (speedInput) {
-                const newRate = parseFloat(speedInput);
-                
-                if (!isNaN(newRate) && newRate > 0) {
-                    this.setSpeed(newRate);
-                } else {
-                    alert('Invalid speed. Please enter a positive number.');
-                }
+            if (newSpeed) {
+                this.setSpeed(parseFloat(newSpeed));
             }
-        },
-        
-        run: function() {
-            if (this.findVideos()) {
-                this.promptForSpeed();
-            } else {
-                alert('No HTML5 video found on this page.');
-            }
-        }
-    };
+        };
 
-    // Make the controller globally accessible so the bookmarklet
-    // can re-run it without re-injecting the whole script.
-    window.videoSpeedController = controller;
+        /**
+         * Initializes the controller.
+         */
+        this.init = function() {
+            this.run();
+        };
+    }
+
+    // --- Script Execution ---
+
+    // Check if the controller is already loaded on the page
+    if (typeof(window.videoSpeedController) === 'undefined') {
+        window.videoSpeedController = new VideoSpeed();
+    }
     
-    // Run the controller for the first time
-    window.videoSpeedController.run();
+    // Run the controller
+    window.videoSpeedController.init();
 
 })();
